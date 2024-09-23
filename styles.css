@@ -1,0 +1,90 @@
+body {
+    display: flex;
+    margin: 0;
+    height: 100vh;
+    background-color: #f4f4f9; /* لون خلفية أكثر حداثة */
+    overflow: hidden;
+    flex-direction: column;
+    font-family: 'Cairo', sans-serif; /* استخدام خط الثلث */
+}
+
+.header, .footer {
+    background-color: rgba(0, 128, 0, 0.9);
+    color: white;
+    font-size: 50px;
+    text-align: center;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 10px; /* زوايا دائرية */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* ظل */
+}
+
+.content {
+    display: flex;
+    flex: 1;
+    padding: 10px;
+}
+
+.left, .right {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 10px;
+    border-radius: 10px; /* زوايا دائرية */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* ظل */
+}
+
+.left {
+    background-image: url('https://source.unsplash.com/random/800x600?nature');
+    background-size: cover; /* تغطية كاملة */
+    background-position: center; /* مركز الصورة */
+}
+
+.right {
+    background-image: url('https://source.unsplash.com/random/800x600?city');
+    background-size: cover; /* تغطية كاملة */
+    background-position: center; /* مركز الصورة */
+    flex-direction: column;
+    align-items: center;
+}
+
+video {
+    width: 100%;
+    height: auto; /* الحفاظ على النسبة */
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* ظل */
+}
+
+.button-container {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+button {
+    background-color: darkgreen;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    margin: 0 10px;
+    font-size: 1.1em; /* حجم خط أكبر */
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s; /* تأثيرات انتقال */
+}
+
+button:hover {
+    background-color: #228B22; /* تغيير اللون عند المرور */
+    transform: scale(1.05); /* تكبير طفيف عند المرور */
+}
+
+@media (max-width: 600px) {
+    .header, .footer {
+        font-size: 40px; /* تصغير حجم الخط في الشاشات الصغيرة */
+    }
+    button {
+        font-size: 0.9em; /* حجم أزرار أصغر */
+    }
+}
