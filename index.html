@@ -3,27 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحة ويب مضمنة مع عرض Padlet وفيديو</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400&display=swap" rel="stylesheet"> <!-- خط الثلث -->
+    <title>صفحة ويب مع Padlet وفيديو</title>
     <style>
         body {
             display: flex;
             margin: 0;
             height: 100vh;
-            background-color: #e0f7e0; /* لون خلفية أفتح */
+            background-color: #F5F5DC; /* لون خلفية بني فاتح */
             overflow: hidden;
             flex-direction: column;
-            font-family: 'Cairo', sans-serif; /* استخدام خط الثلث */
+            font-family: sans-serif;
         }
         .header, .footer {
-            background-color: rgba(0, 128, 0, 0.9);
+            background-color: #A0522D; /* لون بني */
             color: white;
-            font-size: 50px; /* حجم الخط 50px */
+            font-size: 50px;
             text-align: center;
             padding: 15px;
             margin: 10px 0;
-            border-radius: 10px; /* زوايا دائرية */
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* ظل */
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
         .content {
             display: flex;
@@ -37,26 +36,26 @@
             align-items: center;
             position: relative;
             padding: 10px;
-            border-radius: 10px; /* زوايا دائرية */
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* ظل */
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
         .left {
             background-image: url('https://source.unsplash.com/random/800x600?nature');
-            background-size: cover; /* تغطية كاملة */
-            background-position: center; /* مركز الصورة */
+            background-size: cover;
+            background-position: center;
         }
         .right {
             background-image: url('https://source.unsplash.com/random/800x600?city');
-            background-size: cover; /* تغطية كاملة */
-            background-position: center; /* مركز الصورة */
+            background-size: cover;
+            background-position: center;
             flex-direction: column;
             align-items: center;
         }
         video {
             width: 100%;
-            height: auto; /* الحفاظ على النسبة */
+            height: auto;
             border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* ظل */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
         .button-container {
             margin-top: 20px;
@@ -64,26 +63,26 @@
             justify-content: center;
         }
         button {
-            background-color: darkgreen;
+            background-color: #A0522D; /* لون بني */
             color: white;
             border: none;
             border-radius: 5px;
             padding: 10px 20px;
             margin: 0 10px;
-            font-size: 1.1em; /* حجم خط أكبر */
+            font-size: 1.1em;
             cursor: pointer;
-            transition: background-color 0.3s, transform 0.2s; /* تأثيرات انتقال */
+            transition: background-color 0.3s, transform 0.2s;
         }
         button:hover {
-            background-color: #228B22; /* تغيير اللون عند المرور */
-            transform: scale(1.05); /* تكبير طفيف عند المرور */
+            background-color: #8B4513; /* لون بني أغمق عند المرور */
+            transform: scale(1.05);
         }
         @media (max-width: 600px) {
             .header, .footer {
-                font-size: 40px; /* تصغير حجم الخط في الشاشات الصغيرة */
+                font-size: 40px;
             }
             button {
-                font-size: 0.9em; /* حجم أزرار أصغر */
+                font-size: 0.9em;
             }
         }
     </style>
@@ -135,7 +134,7 @@
 
         function loadVideo(index) {
             videoSource.src = videos[index];
-            videoElement.load(); // إعادة تحميل الفيديو
+            videoElement.load();
             videoElement.play();
         }
 
@@ -153,7 +152,6 @@
         document.getElementById('nextBtn').addEventListener('click', playNextVideo);
         document.getElementById('prevBtn').addEventListener('click', playPrevVideo);
 
-        // بدء التشغيل الأول
         loadVideo(currentIndex);
     </script>
 </body>
