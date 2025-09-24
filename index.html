@@ -1,158 +1,780 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحة ويب مع Padlet وفيديو</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>لوحة التوقيع التفاعلية</title>
     <style>
-        body {
-            display: flex;
+        * {
             margin: 0;
-            height: 100vh;
-            background-color: #F5F5DC; /* لون خلفية بني فاتح */
-            overflow: hidden;
-            flex-direction: column;
-            font-family: sans-serif;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        .header, .footer {
-            background-color: #A0522D; /* لون بني */
-            color: white;
-            font-size: 50px;
-            text-align: center;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-        }
-        .content {
+
+        body {
+            direction: rtl;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             display: flex;
-            flex: 1;
-            padding: 10px;
-        }
-        .left, .right {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            padding: 10px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-        }
-        .left {
-            background-image: url('https://source.unsplash.com/random/800x600?nature');
-            background-size: cover;
-            background-position: center;
-        }
-        .right {
-            background-image: url('https://source.unsplash.com/random/800x600?city');
-            background-size: cover;
-            background-position: center;
             flex-direction: column;
             align-items: center;
+            padding: 20px;
+            color: #333;
         }
-        video {
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            padding: 20px;
             width: 100%;
-            height: auto;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 24px;
+            color: #4a5568;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .signature-container {
+            border: 3px dashed #cbd5e0;
             border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            background: #f7fafc;
+            position: relative;
+            margin: 20px 0;
+            touch-action: none;
         }
-        .button-container {
-            margin-top: 20px;
+
+        .signature-canvas {
+            display: block;
+            width: 100%;
+            border-radius: 7px;
+            background: transparent;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        .instructions {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #a0aec0;
+            font-size: 16px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .controls {
             display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
             justify-content: center;
+            align-items: center;
+            margin: 20px 0;
         }
-        button {
-            background-color: #A0522D; /* لون بني */
-            color: white;
+
+        .btn {
+            padding: 12px 20px;
             border: none;
-            border-radius: 5px;
-            padding: 10px 20px;
-            margin: 0 10px;
-            font-size: 1.1em;
+            border-radius: 25px;
             cursor: pointer;
-            transition: background-color 0.3s, transform 0.2s;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            min-width: 120px;
         }
-        button:hover {
-            background-color: #8B4513; /* لون بني أغمق عند المرور */
-            transform: scale(1.05);
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
         }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .color-option.active {
+            border-color: #4a5568;
+            transform: scale(1.2);
+        }
+
+        .thickness-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+
+        .thickness-slider {
+            width: 150px;
+            height: 5px;
+            border-radius: 5px;
+            outline: none;
+            background: #e2e8f0;
+        }
+
+        .preview {
+            margin-top: 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            animation: modalSlideIn 0.3s ease-out;
+            direction: rtl;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            color: #2d3748;
+            font-weight: 700;
+        }
+
+        .modal-icon {
+            font-size: 28px;
+        }
+
+        .modal-content {
+            text-align: right;
+            line-height: 1.8;
+            color: #4a5568;
+            font-size: 16px;
+            margin-bottom: 25px;
+        }
+
+        .step {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            border-right: 4px solid #25D366;
+            text-align: right;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: #25D366;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .whatsapp-number {
+            background: #e8f5e8;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #2d5016;
+            margin: 15px 0;
+            border: 2px solid #25D366;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+
+        .btn-modal {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            min-width: 100px;
+        }
+
+        .btn-modal-primary {
+            background: linear-gradient(45deg, #25D366, #128C7E);
+            color: white;
+        }
+
+        .btn-modal-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+            border: 2px solid #cbd5e0;
+        }
+
+        .btn-modal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
         @media (max-width: 600px) {
-            .header, .footer {
-                font-size: 40px;
+            .container {
+                margin: 10px;
+                padding: 15px;
             }
-            button {
-                font-size: 0.9em;
+
+            .title {
+                font-size: 20px;
             }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 200px;
+            }
+
+            .modal {
+                padding: 20px;
+                margin: 20px;
+            }
+
+            .modal-content {
+                font-size: 14px;
+            }
+
+            .modal-buttons {
+                flex-direction: column;
+            }
+
+            .btn-modal {
+                width: 100%;
+            }
+        }
+
+        .loading {
+            display: none;
+            margin: 10px 0;
+        }
+
+        .loading::after {
+            content: "";
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        كل عام وأنت بخير ياوطني
+    <div class="container">
+        <h1 class="title">🖋️ لوحة التوقيع الرقمية</h1>
+
+        <div class="signature-container">
+            <canvas id="signature-canvas" class="signature-canvas" width="560" height="300"></canvas>
+            <div class="instructions" id="instructions">اضغط هنا وقم بالتوقيع</div>
+        </div>
+
+        <div class="color-picker">
+            <div class="color-option active" data-color="#000000" style="background: #000000;" title="أسود"></div>
+            <div class="color-option" data-color="#2563eb" style="background: #2563eb;" title="أزرق"></div>
+            <div class="color-option" data-color="#dc2626" style="background: #dc2626;" title="أحمر"></div>
+            <div class="color-option" data-color="#16a34a" style="background: #16a34a;" title="أخضر"></div>
+            <div class="color-option" data-color="#9333ea" style="background: #9333ea;" title="بنفسجي"></div>
+        </div>
+
+        <div class="thickness-control">
+            <span>سمك الخط:</span>
+            <input type="range" id="thickness-slider" class="thickness-slider" min="1" max="10" value="3">
+            <span id="thickness-value">3</span>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-secondary" id="clear-btn">🗑️ مسح</button>
+            <button class="btn btn-primary" id="undo-btn">↶ تراجع</button>
+            <button class="btn btn-success" id="export-btn">💾 تصدير PNG</button>
+        </div>
+
+        <div class="loading" id="loading">جاري المعالجة...</div>
+        <div class="status" id="status"></div>
+
+        <canvas id="preview-canvas" class="preview" width="560" height="300"></canvas>
     </div>
-    <div class="content">
-        <div class="left">
-            <div class="padlet-slideshow-embed" style="width:100%;height:100%;">
-                <p style="padding:0;margin:0;width:100%;height:100%">
-                    <iframe src="https://padlet.com/embed/arbmw8r8ow081vwc/slideshow?autoplay=1&loop=1&duration=auto" 
-                            frameborder="0" 
-                            allow="clipboard-write" 
-                            style="width:100%;height:100%;display:block;padding:0;margin:0"></iframe>
+
+    <!-- نافذة تعليمات واتساب المنبثقة -->
+    <div class="modal-overlay" id="whatsapp-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-icon">📱</span>
+                <h2 class="modal-title">كيفية إرسال التوقيع عبر واتساب</h2>
+            </div>
+
+            <div class="modal-content">
+                <div class="step">
+                    <span class="step-number">1</span>
+                    قم بفتح تطبيق واتساب على هاتفك أو حاسوبك
+                </div>
+
+                <div class="step">
+                    <span class="step-number">2</span>
+                    ابحث عن الرقم التالي أو انسخه:
+                    <div class="whatsapp-number">
+                        📞 +966550807306
+                        <button onclick="copyNumber()" style="background: none; border: none; cursor: pointer; font-size: 16px;" title="نسخ الرقم">📋</button>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">3</span>
+                    اضغط على أيقونة المرفقات (📎) في محادثة واتساب
+                </div>
+
+                <div class="step">
+                    <span class="step-number">4</span>
+                    اختر "معرض الصور" أو "الكاميرا" ثم اختر صورة التوقيع التي تم تحميلها
+                </div>
+
+                <div class="step">
+                    <span class="step-number">5</span>
+                    أضف رسالة إذا أردت، ثم اضغط "إرسال" ✅
+                </div>
+
+                <p style="margin-top: 15px; font-size: 14px; color: #666;">
+                    💡 <strong>نصيحة:</strong> تأكد من أن صورة التوقيع موجودة في مجلد التحميلات أو معرض الصور
                 </p>
             </div>
-        </div>
-        <div class="right">
-            <video id="video" controls>
-                <source id="videoSource" type="video/mp4">
-                متصفحك لا يدعم تشغيل الفيديو.
-            </video>
-            <div class="button-container">
-                <button id="prevBtn">السابق</button>
-                <button id="nextBtn">التالي</button>
+
+            <div class="modal-buttons">
+                <button class="btn-modal btn-modal-primary" onclick="openWhatsApp()">
+                    📱 فتح واتساب مباشرة
+                </button>
+                <button class="btn-modal btn-modal-secondary" onclick="closeModal()">
+                    ✅ تم
+                </button>
             </div>
         </div>
-    </div>
-    <div class="footer">
-        مجمع الثقافة التعليمي - النشاط الطلابي
     </div>
 
     <script>
-        const videoElement = document.getElementById('video');
-        const videoSource = document.getElementById('videoSource');
-        const videos = [
-            'videos/1.mp4',
-            'videos/2.mp4',
-            'videos/3.mp4',
-            'videos/4.mp4',
-            'videos/5.mp4',
-            'videos/6.mp4',
-            'videos/7.mp4'
-        ];
+        class SignaturePad {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.isDrawing = false;
+                this.strokes = [];
+                this.currentStroke = [];
+                this.color = '#000000';
+                this.thickness = 3;
 
-        let currentIndex = 0;
+                this.setupCanvas();
+                this.setupEventListeners();
+            }
 
-        function loadVideo(index) {
-            videoSource.src = videos[index];
-            videoElement.load();
-            videoElement.play();
+            setupCanvas() {
+                // Set up canvas for high DPI displays
+                const rect = this.canvas.getBoundingClientRect();
+                const dpr = window.devicePixelRatio || 1;
+
+                this.canvas.width = rect.width * dpr;
+                this.canvas.height = rect.height * dpr;
+
+                this.ctx.scale(dpr, dpr);
+                this.canvas.style.width = rect.width + 'px';
+                this.canvas.style.height = rect.height + 'px';
+
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+                this.ctx.imageSmoothingEnabled = true;
+            }
+
+            setupEventListeners() {
+                // Mouse events
+                this.canvas.addEventListener('mousedown', this.startDrawing.bind(this));
+                this.canvas.addEventListener('mousemove', this.draw.bind(this));
+                this.canvas.addEventListener('mouseup', this.stopDrawing.bind(this));
+                this.canvas.addEventListener('mouseout', this.stopDrawing.bind(this));
+
+                // Touch events for mobile
+                this.canvas.addEventListener('touchstart', this.handleTouch.bind(this));
+                this.canvas.addEventListener('touchmove', this.handleTouch.bind(this));
+                this.canvas.addEventListener('touchend', this.stopDrawing.bind(this));
+                this.canvas.addEventListener('touchcancel', this.stopDrawing.bind(this));
+
+                // Prevent scrolling when drawing on mobile
+                this.canvas.addEventListener('touchstart', (e) => e.preventDefault());
+                this.canvas.addEventListener('touchmove', (e) => e.preventDefault());
+            }
+
+            getCoordinates(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                return {
+                    x: (e.clientX || e.touches[0].clientX) - rect.left,
+                    y: (e.clientY || e.touches[0].clientY) - rect.top
+                };
+            }
+
+            handleTouch(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 'mousemove', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                this.canvas.dispatchEvent(mouseEvent);
+            }
+
+            startDrawing(e) {
+                this.isDrawing = true;
+                this.currentStroke = [];
+                const coords = this.getCoordinates(e);
+
+                this.ctx.beginPath();
+                this.ctx.moveTo(coords.x, coords.y);
+                this.currentStroke.push({x: coords.x, y: coords.y, color: this.color, thickness: this.thickness});
+
+                // Hide instructions
+                document.getElementById('instructions').style.display = 'none';
+            }
+
+            draw(e) {
+                if (!this.isDrawing) return;
+
+                const coords = this.getCoordinates(e);
+
+                this.ctx.globalCompositeOperation = 'source-over';
+                this.ctx.strokeStyle = this.color;
+                this.ctx.lineWidth = this.thickness;
+
+                this.ctx.lineTo(coords.x, coords.y);
+                this.ctx.stroke();
+
+                this.currentStroke.push({x: coords.x, y: coords.y, color: this.color, thickness: this.thickness});
+            }
+
+            stopDrawing() {
+                if (!this.isDrawing) return;
+                this.isDrawing = false;
+
+                if (this.currentStroke.length > 0) {
+                    this.strokes.push([...this.currentStroke]);
+                }
+            }
+
+            clear() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.strokes = [];
+                document.getElementById('instructions').style.display = 'block';
+            }
+
+            undo() {
+                if (this.strokes.length === 0) return;
+
+                this.strokes.pop();
+                this.redraw();
+
+                if (this.strokes.length === 0) {
+                    document.getElementById('instructions').style.display = 'block';
+                }
+            }
+
+            redraw() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                this.strokes.forEach(stroke => {
+                    if (stroke.length === 0) return;
+
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(stroke[0].x, stroke[0].y);
+                    this.ctx.strokeStyle = stroke[0].color;
+                    this.ctx.lineWidth = stroke[0].thickness;
+
+                    for (let i = 1; i < stroke.length; i++) {
+                        this.ctx.lineTo(stroke[i].x, stroke[i].y);
+                        this.ctx.stroke();
+                    }
+                });
+            }
+
+            setColor(color) {
+                this.color = color;
+            }
+
+            setThickness(thickness) {
+                this.thickness = thickness;
+            }
+
+            isEmpty() {
+                return this.strokes.length === 0;
+            }
+
+            getImageData(format = 'image/png') {
+                // Create a new canvas with transparent background
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+
+                tempCanvas.width = this.canvas.width;
+                tempCanvas.height = this.canvas.height;
+
+                // Set transparent background
+                tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+                // Copy the signature
+                tempCtx.drawImage(this.canvas, 0, 0);
+
+                return tempCanvas.toDataURL(format);
+            }
         }
 
-        function playNextVideo() {
-            currentIndex = (currentIndex + 1) % videos.length;
-            loadVideo(currentIndex);
+        // Initialize signature pad
+        const canvas = document.getElementById('signature-canvas');
+        const signaturePad = new SignaturePad(canvas);
+
+        // Color picker functionality
+        document.querySelectorAll('.color-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.color-option').forEach(o => o.classList.remove('active'));
+                option.classList.add('active');
+                signaturePad.setColor(option.dataset.color);
+            });
+        });
+
+        // Thickness control
+        const thicknessSlider = document.getElementById('thickness-slider');
+        const thicknessValue = document.getElementById('thickness-value');
+
+        thicknessSlider.addEventListener('input', () => {
+            const thickness = thicknessSlider.value;
+            thicknessValue.textContent = thickness;
+            signaturePad.setThickness(parseInt(thickness));
+        });
+
+        // Control buttons
+        document.getElementById('clear-btn').addEventListener('click', () => {
+            signaturePad.clear();
+            hideStatus();
+        });
+
+        document.getElementById('undo-btn').addEventListener('click', () => {
+            signaturePad.undo();
+        });
+
+        // Export functionality with WhatsApp instructions modal
+        document.getElementById('export-btn').addEventListener('click', () => {
+            if (signaturePad.isEmpty()) {
+                showStatus('يرجى إضافة التوقيع أولاً', 'error');
+                return;
+            }
+
+            showLoading();
+
+            setTimeout(() => {
+                try {
+                    const dataURL = signaturePad.getImageData('image/png');
+
+                    // Create download link
+                    const link = document.createElement('a');
+                    link.download = 'signature-' + Date.now() + '.png';
+                    link.href = dataURL;
+                    link.click();
+
+                    hideLoading();
+                    showStatus('تم تصدير التوقيع بنجاح! 📁', 'success');
+
+                    // Show WhatsApp instructions modal after successful export
+                    setTimeout(() => {
+                        showWhatsAppModal();
+                    }, 1000);
+
+                } catch (error) {
+                    hideLoading();
+                    showStatus('حدث خطأ في التصدير', 'error');
+                }
+            }, 500);
+        });
+
+        // Modal functions
+        function showWhatsAppModal() {
+            document.getElementById('whatsapp-modal').style.display = 'flex';
         }
 
-        function playPrevVideo() {
-            currentIndex = (currentIndex - 1 + videos.length) % videos.length;
-            loadVideo(currentIndex);
+        function closeModal() {
+            document.getElementById('whatsapp-modal').style.display = 'none';
         }
 
-        videoElement.addEventListener('ended', playNextVideo);
-        document.getElementById('nextBtn').addEventListener('click', playNextVideo);
-        document.getElementById('prevBtn').addEventListener('click', playPrevVideo);
+        function copyNumber() {
+            navigator.clipboard.writeText('+966550807306').then(() => {
+                showStatus('تم نسخ الرقم! 📋', 'success');
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = '+966550807306';
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showStatus('تم نسخ الرقم! 📋', 'success');
+            });
+        }
 
-        loadVideo(currentIndex);
+        function openWhatsApp() {
+            const message = 'مرحباً، أرسل لك توقيعي الرقمي';
+            const whatsappUrl = `https://wa.me/966550807306?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+            closeModal();
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('whatsapp-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'whatsapp-modal') {
+                closeModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Utility functions
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+            status.style.display = 'block';
+
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 5000);
+        }
+
+        function hideStatus() {
+            document.getElementById('status').style.display = 'none';
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            signaturePad.setupCanvas();
+            signaturePad.redraw();
+        });
+
+        // Prevent context menu on canvas
+        canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
     </script>
 </body>
 </html>
