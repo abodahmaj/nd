@@ -2,779 +2,307 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>جباية التواقيع</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صورتك كرائد فضاء</title>
+    <!-- استدعاء Tailwind CSS للتصميم -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- استدعاء مكتبة MediaPipe لإزالة الخلفية -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
         body {
-            direction: rtl;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            color: #333;
-        }
-
-        .container {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            padding: 20px;
-            width: 100%;
-            max-width: 600px;
-            text-align: center;
-        }
-
-        .title {
-            font-size: 24px;
-            color: #4a5568;
-            margin-bottom: 20px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .signature-container {
-            border: 3px dashed #cbd5e0;
-            border-radius: 10px;
-            background: #f7fafc;
-            position: relative;
-            margin: 20px 0;
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(180deg, #0f172a, #000000);
             touch-action: none;
         }
-
-        .signature-canvas {
+        #astronaut-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: auto;
+            overflow: hidden;
+        }
+        /* تم تغيير الفيديو إلى Canvas لعرض الصورة بعد إزالة الخلفية */
+        #webcam-feed {
+            position: absolute;
+            top: 18.5%;
+            left: 50%;
+            width: 25%;
+            height: 32%; 
+            border-radius: 50%; 
+            object-fit: cover;
+            display: none;
+            cursor: grab;
+        }
+        #webcam-feed:active {
+            cursor: grabbing;
+        }
+        #astronaut-image {
             display: block;
             width: 100%;
-            border-radius: 7px;
-            background: transparent;
-            cursor: crosshair;
-            touch-action: none;
+            height: auto;
+            border-radius: 1rem;
+            box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.1);
+            animation: pulse-glow 3s infinite ease-in-out;
         }
-
-        .instructions {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #a0aec0;
-            font-size: 16px;
-            pointer-events: none;
-            z-index: 1;
+        .loader {
+            border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6;
+            border-radius: 50%; width: 40px; height: 40px;
+            animation: spin 2s linear infinite; display: none; margin: 20px auto;
         }
-
-        .controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            align-items: center;
-            margin: 20px 0;
-        }
-
-        .btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            min-width: 120px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-        }
-
-        .btn-secondary {
-            background: #e2e8f0;
-            color: #4a5568;
-        }
-
-        .btn-success {
-            background: linear-gradient(45deg, #48bb78, #38a169);
-            color: white;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .color-picker {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin: 15px 0;
-        }
-
-        .color-option {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 3px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        .color-option.active {
-            border-color: #4a5568;
-            transform: scale(1.2);
-        }
-
-        .thickness-control {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            justify-content: center;
-            margin: 15px 0;
-        }
-
-        .thickness-slider {
-            width: 150px;
-            height: 5px;
-            border-radius: 5px;
-            outline: none;
-            background: #e2e8f0;
-        }
-
-        .preview {
-            margin-top: 20px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            display: none;
-        }
-
-        .status {
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 5px;
-            display: none;
-        }
-
-        .status.success {
-            background: #c6f6d5;
-            color: #22543d;
-            border: 1px solid #9ae6b4;
-        }
-
-        .status.error {
-            background: #fed7d7;
-            color: #742a2a;
-            border: 1px solid #fc8181;
-        }
-
-        /* Modal styles */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            backdrop-filter: blur(5px);
-        }
-
-        .modal {
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            max-width: 500px;
-            width: 90%;
-            text-align: center;
-            animation: modalSlideIn 0.3s ease-out;
-            direction: rtl;
-        }
-
-        @keyframes modalSlideIn {
-            from {
-                transform: translateY(-50px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .modal-header {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            gap: 10px;
-        }
-
-        .modal-title {
-            font-size: 22px;
-            color: #2d3748;
-            font-weight: 700;
-        }
-
-        .modal-icon {
-            font-size: 28px;
-        }
-
-        .modal-content {
-            text-align: right;
-            line-height: 1.8;
-            color: #4a5568;
-            font-size: 16px;
-            margin-bottom: 25px;
-        }
-
-        .step {
-            background: #f7fafc;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 10px 0;
-            border-right: 4px solid #25D366;
-            text-align: right;
-        }
-
-        .step-number {
-            display: inline-block;
-            background: #25D366;
-            color: white;
-            width: 25px;
-            height: 25px;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 25px;
-            font-size: 14px;
-            font-weight: bold;
-            margin-left: 10px;
-        }
-
-        .whatsapp-number {
-            background: #e8f5e8;
-            padding: 10px;
-            border-radius: 8px;
-            font-weight: bold;
-            color: #2d5016;
-            margin: 15px 0;
-            border: 2px solid #25D366;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 25px;
-        }
-
-        .btn-modal {
-            padding: 12px 30px;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            min-width: 100px;
-        }
-
-        .btn-modal-primary {
-            background: linear-gradient(45deg, #25D366, #128C7E);
-            color: white;
-        }
-
-        .btn-modal-secondary {
-            background: #e2e8f0;
-            color: #4a5568;
-            border: 2px solid #cbd5e0;
-        }
-
-        .btn-modal:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                margin: 10px;
-                padding: 15px;
-            }
-
-            .title {
-                font-size: 20px;
-            }
-
-            .controls {
-                flex-direction: column;
-            }
-
-            .btn {
-                width: 100%;
-                max-width: 200px;
-            }
-
-            .modal {
-                padding: 20px;
-                margin: 20px;
-            }
-
-            .modal-content {
-                font-size: 14px;
-            }
-
-            .modal-buttons {
-                flex-direction: column;
-            }
-
-            .btn-modal {
-                width: 100%;
-            }
-        }
-
-        .loading {
-            display: none;
-            margin: 10px 0;
-        }
-
-        .loading::after {
-            content: "";
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.1); }
+            50% { box-shadow: 0 0 30px 10px rgba(199, 210, 254, 0.2); }
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1 class="title">🖋️ جباية التواقيع</h1>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen p-4">
 
-        <div class="signature-container">
-            <canvas id="signature-canvas" class="signature-canvas" width="560" height="300"></canvas>
-            <div class="instructions" id="instructions">اضغط هنا وقم بالتوقيع</div>
+    <div class="w-full max-w-3xl text-center">
+        <h1 class="text-3xl md:text-5xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">كن رائد فضاء! 🚀</h1>
+        <p class="text-gray-400 mb-6">ضع وجهك في المكان المناسب ✨، ثم التقط صورة 🪐.</p>
+
+        <div id="astronaut-container" class="mb-6 shadow-2xl rounded-2xl">
+            <img id="astronaut-image" src="https://i.ibb.co/5XrHkbnc/Black-Illustrative-Astronaut-Square-Pillow-1.png" alt="رائد فضاء بتصميم توضيحي" crossorigin="anonymous">
+            <!-- الفيديو الأصلي سيكون مخفيًا -->
+            <video id="hidden-video" style="display: none;" autoplay playsinline muted></video>
+            <!-- Canvas لعرض الفيديو بعد إزالة الخلفية -->
+            <canvas id="webcam-feed"></canvas>
+        </div>
+        
+        <div class="flex justify-center items-center space-x-4 space-x-reverse mb-4">
+            <button id="start-camera" class="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-full transition-transform transform hover:scale-105 shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-800 flex items-center justify-center">
+                <span class="text-2xl">🛰️</span>
+                <span class="mr-3">شغّل الكاميرا</span>
+            </button>
+            <button id="capture-photo" class="bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-bold py-3 px-6 rounded-full transition-transform transform hover:scale-105 shadow-lg focus:outline-none focus:ring-4 focus:ring-green-800 hidden items-center justify-center">
+                <span class="text-2xl">📸</span>
+                <span class="mr-3">التقط صورة</span>
+            </button>
         </div>
 
-        <div class="color-picker">
-            <div class="color-option active" data-color="#000000" style="background: #000000;" title="أسود"></div>
-            <div class="color-option" data-color="#2563eb" style="background: #2563eb;" title="أزرق"></div>
-            <div class="color-option" data-color="#dc2626" style="background: #dc2626;" title="أحمر"></div>
-            <div class="color-option" data-color="#16a34a" style="background: #16a34a;" title="أخضر"></div>
-            <div class="color-option" data-color="#9333ea" style="background: #9333ea;" title="بنفسجي"></div>
-        </div>
+        <div id="loader" class="loader"></div>
+        <p id="error-message" class="text-red-500 mt-4 font-semibold hidden"></p>
 
-        <div class="thickness-control">
-            <span>سمك الخط:</span>
-            <input type="range" id="thickness-slider" class="thickness-slider" min="1" max="10" value="3">
-            <span id="thickness-value">3</span>
-        </div>
-
-        <div class="controls">
-            <button class="btn btn-secondary" id="clear-btn">🗑️ مسح</button>
-            <button class="btn btn-primary" id="undo-btn">↶ تراجع</button>
-            <button class="btn btn-success" id="export-btn">💾 تصدير PNG</button>
-        </div>
-
-        <div class="loading" id="loading">جاري المعالجة...</div>
-        <div class="status" id="status"></div>
-
-        <canvas id="preview-canvas" class="preview" width="560" height="300"></canvas>
-    </div>
-
-    <!-- نافذة تعليمات واتساب المنبثقة -->
-    <div class="modal-overlay" id="whatsapp-modal">
-        <div class="modal">
-            <div class="modal-header">
-                <span class="modal-icon">📱</span>
-                <h2 class="modal-title">كيفية إرسال التوقيع عبر واتساب</h2>
-            </div>
-
-            <div class="modal-content">
-                <div class="step">
-                    <span class="step-number">1</span>
-                    قم بفتح تطبيق واتساب على هاتفك أو حاسوبك
-                </div>
-
-                <div class="step">
-                    <span class="step-number">2</span>
-                    ابحث عن الرقم التالي أو انسخه:
-                    <div class="whatsapp-number">
-                        📞 +966550807306
-                        <button onclick="copyNumber()" style="background: none; border: none; cursor: pointer; font-size: 16px;" title="نسخ الرقم">📋</button>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <span class="step-number">3</span>
-                    اضغط على أيقونة المرفقات (📎) في محادثة واتساب
-                </div>
-
-                <div class="step">
-                    <span class="step-number">4</span>
-                    اختر "معرض الصور" أو "الكاميرا" ثم اختر صورة التوقيع التي تم تحميلها
-                </div>
-
-                <div class="step">
-                    <span class="step-number">5</span>
-                    أضف رسالة إذا أردت، ثم اضغط "إرسال" ✅
-                </div>
-
-                <p style="margin-top: 15px; font-size: 14px; color: #666;">
-                    💡 <strong>نصيحة:</strong> تأكد من أن صورة التوقيع موجودة في مجلد التحميلات أو معرض الصور
-                </p>
-            </div>
-
-            <div class="modal-buttons">
-                <button class="btn-modal btn-modal-primary" onclick="openWhatsApp()">
-                    📱 فتح واتساب مباشرة
-                </button>
-                <button class="btn-modal btn-modal-secondary" onclick="closeModal()">
-                    ✅ تم
-                </button>
-            </div>
+        <div class="mt-8 text-gray-500 text-sm">
+            <p>إعداد رائد النشاط بمجمع الثقافة التعليمي</p>
+            <p class="font-semibold">أ. علي جبريل</p>
         </div>
     </div>
 
     <script>
-        class SignaturePad {
-            constructor(canvas) {
-                this.canvas = canvas;
-                this.ctx = canvas.getContext('2d');
-                this.isDrawing = false;
-                this.strokes = [];
-                this.currentStroke = [];
-                this.color = '#000000';
-                this.thickness = 3;
+        const videoElement = document.getElementById('hidden-video');
+        const canvasElement = document.getElementById('webcam-feed');
+        const canvasCtx = canvasElement.getContext('2d');
+        const startButton = document.getElementById('start-camera');
+        const captureButton = document.getElementById('capture-photo');
+        const loader = document.getElementById('loader');
+        const errorMessage = document.getElementById('error-message');
+        const astronautImage = document.getElementById('astronaut-image');
+        
+        let isDragging = false;
+        let startPos = { x: 0, y: 0 };
+        let currentOffset = { x: -23, y: -165 };
+        let lastContainerWidth = 0;
 
-                this.setupCanvas();
-                this.setupEventListeners();
-            }
-
-            setupCanvas() {
-                // Set up canvas for high DPI displays
-                const rect = this.canvas.getBoundingClientRect();
-                const dpr = window.devicePixelRatio || 1;
-
-                this.canvas.width = rect.width * dpr;
-                this.canvas.height = rect.height * dpr;
-
-                this.ctx.scale(dpr, dpr);
-                this.canvas.style.width = rect.width + 'px';
-                this.canvas.style.height = rect.height + 'px';
-
-                this.ctx.lineCap = 'round';
-                this.ctx.lineJoin = 'round';
-                this.ctx.imageSmoothingEnabled = true;
-            }
-
-            setupEventListeners() {
-                // Mouse events
-                this.canvas.addEventListener('mousedown', this.startDrawing.bind(this));
-                this.canvas.addEventListener('mousemove', this.draw.bind(this));
-                this.canvas.addEventListener('mouseup', this.stopDrawing.bind(this));
-                this.canvas.addEventListener('mouseout', this.stopDrawing.bind(this));
-
-                // Touch events for mobile
-                this.canvas.addEventListener('touchstart', this.handleTouch.bind(this));
-                this.canvas.addEventListener('touchmove', this.handleTouch.bind(this));
-                this.canvas.addEventListener('touchend', this.stopDrawing.bind(this));
-                this.canvas.addEventListener('touchcancel', this.stopDrawing.bind(this));
-
-                // Prevent scrolling when drawing on mobile
-                this.canvas.addEventListener('touchstart', (e) => e.preventDefault());
-                this.canvas.addEventListener('touchmove', (e) => e.preventDefault());
-            }
-
-            getCoordinates(e) {
-                const rect = this.canvas.getBoundingClientRect();
-                return {
-                    x: (e.clientX || e.touches[0].clientX) - rect.left,
-                    y: (e.clientY || e.touches[0].clientY) - rect.top
-                };
-            }
-
-            handleTouch(e) {
-                e.preventDefault();
-                const touch = e.touches[0];
-                const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 'mousemove', {
-                    clientX: touch.clientX,
-                    clientY: touch.clientY
-                });
-                this.canvas.dispatchEvent(mouseEvent);
-            }
-
-            startDrawing(e) {
-                this.isDrawing = true;
-                this.currentStroke = [];
-                const coords = this.getCoordinates(e);
-
-                this.ctx.beginPath();
-                this.ctx.moveTo(coords.x, coords.y);
-                this.currentStroke.push({x: coords.x, y: coords.y, color: this.color, thickness: this.thickness});
-
-                // Hide instructions
-                document.getElementById('instructions').style.display = 'none';
-            }
-
-            draw(e) {
-                if (!this.isDrawing) return;
-
-                const coords = this.getCoordinates(e);
-
-                this.ctx.globalCompositeOperation = 'source-over';
-                this.ctx.strokeStyle = this.color;
-                this.ctx.lineWidth = this.thickness;
-
-                this.ctx.lineTo(coords.x, coords.y);
-                this.ctx.stroke();
-
-                this.currentStroke.push({x: coords.x, y: coords.y, color: this.color, thickness: this.thickness});
-            }
-
-            stopDrawing() {
-                if (!this.isDrawing) return;
-                this.isDrawing = false;
-
-                if (this.currentStroke.length > 0) {
-                    this.strokes.push([...this.currentStroke]);
-                }
-            }
-
-            clear() {
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this.strokes = [];
-                document.getElementById('instructions').style.display = 'block';
-            }
-
-            undo() {
-                if (this.strokes.length === 0) return;
-
-                this.strokes.pop();
-                this.redraw();
-
-                if (this.strokes.length === 0) {
-                    document.getElementById('instructions').style.display = 'block';
-                }
-            }
-
-            redraw() {
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-                this.strokes.forEach(stroke => {
-                    if (stroke.length === 0) return;
-
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(stroke[0].x, stroke[0].y);
-                    this.ctx.strokeStyle = stroke[0].color;
-                    this.ctx.lineWidth = stroke[0].thickness;
-
-                    for (let i = 1; i < stroke.length; i++) {
-                        this.ctx.lineTo(stroke[i].x, stroke[i].y);
-                        this.ctx.stroke();
-                    }
-                });
-            }
-
-            setColor(color) {
-                this.color = color;
-            }
-
-            setThickness(thickness) {
-                this.thickness = thickness;
-            }
-
-            isEmpty() {
-                return this.strokes.length === 0;
-            }
-
-            getImageData(format = 'image/png') {
-                // Create a new canvas with transparent background
-                const tempCanvas = document.createElement('canvas');
-                const tempCtx = tempCanvas.getContext('2d');
-
-                tempCanvas.width = this.canvas.width;
-                tempCanvas.height = this.canvas.height;
-
-                // Set transparent background
-                tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
-
-                // Copy the signature
-                tempCtx.drawImage(this.canvas, 0, 0);
-
-                return tempCanvas.toDataURL(format);
-            }
+        function updateWebcamTransform() {
+            const zoom = 0.35; 
+            canvasElement.style.transform = `translateX(calc(-50% + ${currentOffset.x}px)) translateY(${currentOffset.y}px) scale(${zoom}) scaleX(-1)`;
+        }
+        
+        function onResults(results) {
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.drawImage(results.segmentationMask, 0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.globalCompositeOperation = 'source-in';
+            canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.restore();
         }
 
-        // Initialize signature pad
-        const canvas = document.getElementById('signature-canvas');
-        const signaturePad = new SignaturePad(canvas);
+        const selfieSegmentation = new SelfieSegmentation({locateFile: (file) => {
+            return `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`;
+        }});
+        selfieSegmentation.setOptions({ modelSelection: 1 });
+        selfieSegmentation.onResults(onResults);
 
-        // Color picker functionality
-        document.querySelectorAll('.color-option').forEach(option => {
-            option.addEventListener('click', () => {
-                document.querySelectorAll('.color-option').forEach(o => o.classList.remove('active'));
-                option.classList.add('active');
-                signaturePad.setColor(option.dataset.color);
-            });
-        });
+        async function sendVideoToSegment() {
+            if (videoElement.readyState >= 2) {
+                await selfieSegmentation.send({image: videoElement});
+            }
+            requestAnimationFrame(sendVideoToSegment);
+        }
 
-        // Thickness control
-        const thicknessSlider = document.getElementById('thickness-slider');
-        const thicknessValue = document.getElementById('thickness-value');
+        function startDrag(event) {
+            isDragging = true;
+            canvasElement.style.cursor = 'grabbing';
+            const eventPos = event.touches ? event.touches[0] : event;
+            startPos.x = eventPos.clientX - currentOffset.x;
+            startPos.y = eventPos.clientY - currentOffset.y;
+            window.addEventListener('mousemove', drag);
+            window.addEventListener('mouseup', endDrag);
+            window.addEventListener('touchmove', drag, { passive: false });
+            window.addEventListener('touchend', endDrag);
+        }
 
-        thicknessSlider.addEventListener('input', () => {
-            const thickness = thicknessSlider.value;
-            thicknessValue.textContent = thickness;
-            signaturePad.setThickness(parseInt(thickness));
-        });
+        function drag(event) {
+            if (!isDragging) return;
+            event.preventDefault(); 
+            const eventPos = event.touches ? event.touches[0] : event;
+            currentOffset.x = eventPos.clientX - startPos.x;
+            currentOffset.y = eventPos.clientY - startPos.y;
+            updateWebcamTransform();
+        }
 
-        // Control buttons
-        document.getElementById('clear-btn').addEventListener('click', () => {
-            signaturePad.clear();
-            hideStatus();
-        });
+        function endDrag() {
+            isDragging = false;
+            canvasElement.style.cursor = 'grab';
+            window.removeEventListener('mousemove', drag);
+            window.removeEventListener('mouseup', endDrag);
+            window.removeEventListener('touchmove', drag);
+            window.removeEventListener('touchend', endDrag);
+        }
 
-        document.getElementById('undo-btn').addEventListener('click', () => {
-            signaturePad.undo();
-        });
-
-        // Export functionality with WhatsApp instructions modal
-        document.getElementById('export-btn').addEventListener('click', () => {
-            if (signaturePad.isEmpty()) {
-                showStatus('يرجى إضافة التوقيع أولاً', 'error');
+        canvasElement.addEventListener('mousedown', startDrag);
+        canvasElement.addEventListener('touchstart', startDrag, { passive: false });
+        
+        function handleResize() {
+            if (lastContainerWidth === 0) {
                 return;
             }
+            const newContainerWidth = astronautImage.offsetWidth;
+            const scaleFactor = newContainerWidth / lastContainerWidth;
+            currentOffset.x *= scaleFactor;
+            currentOffset.y *= scaleFactor;
+            lastContainerWidth = newContainerWidth;
+            updateWebcamTransform();
+        }
 
-            showLoading();
+        window.addEventListener('resize', handleResize);
 
-            setTimeout(() => {
-                try {
-                    const dataURL = signaturePad.getImageData('image/png');
+        startButton.addEventListener('click', async () => {
+            startButton.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+            loader.style.display = 'block';
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                videoElement.srcObject = stream;
+                videoElement.onloadedmetadata = () => {
+                    canvasElement.width = videoElement.videoWidth;
+                    canvasElement.height = videoElement.videoHeight;
+                    videoElement.play();
+                    sendVideoToSegment();
+                    loader.style.display = 'none';
+                    canvasElement.style.display = 'block';
+                    captureButton.classList.remove('hidden');
+                    startButton.classList.remove('hidden');
+                    lastContainerWidth = astronautImage.offsetWidth;
+                    updateWebcamTransform();
+                };
+            } catch (error) {
+                console.error("خطأ في الوصول إلى الكاميرا:", error.name, error.message);
+                loader.style.display = 'none';
 
-                    // Create download link
-                    const link = document.createElement('a');
-                    link.download = 'signature-' + Date.now() + '.png';
-                    link.href = dataURL;
-                    link.click();
-
-                    hideLoading();
-                    showStatus('تم تصدير التوقيع بنجاح! 📁', 'success');
-
-                    // Show WhatsApp instructions modal after successful export
-                    setTimeout(() => {
-                        showWhatsAppModal();
-                    }, 1000);
-
-                } catch (error) {
-                    hideLoading();
-                    showStatus('حدث خطأ في التصدير', 'error');
+                let userMessage;
+                if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                    userMessage = 'لقد رفضت الإذن بالوصول إلى الكاميرا. يرجى السماح بالوصول من إعدادات المتصفح ثم تحديث الصفحة.';
+                } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+                    userMessage = 'لم يتم العثور على كاميرا. يرجى التأكد من توصيل كاميرا وأنها تعمل بشكل صحيح.';
+                } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                    userMessage = 'لا يمكن الوصول إلى الكاميرا. قد تكون قيد الاستخدام من قبل تطبيق آخر. أغلق أي برامج أخرى تستخدم الكاميرا وحاول مرة أخرى.';
+                } else {
+                     userMessage = 'حدث خطأ. تأكد من السماح بالوصول للكاميرا وأنها ليست قيد الاستخدام.';
                 }
-            }, 500);
-        });
 
-        // Modal functions
-        function showWhatsAppModal() {
-            document.getElementById('whatsapp-modal').style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('whatsapp-modal').style.display = 'none';
-        }
-
-        function copyNumber() {
-            navigator.clipboard.writeText('+966550807306').then(() => {
-                showStatus('تم نسخ الرقم! 📋', 'success');
-            }).catch(() => {
-                // Fallback for older browsers
-                const textArea = document.createElement('textarea');
-                textArea.value = '+966550807306';
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                showStatus('تم نسخ الرقم! 📋', 'success');
-            });
-        }
-
-        function openWhatsApp() {
-            const message = 'مرحباً، أرسل لك توقيعي الرقمي';
-            const whatsappUrl = `https://wa.me/966550807306?text=${encodeURIComponent(message)}`;
-            window.open(whatsappUrl, '_blank');
-            closeModal();
-        }
-
-        // Close modal when clicking outside
-        document.getElementById('whatsapp-modal').addEventListener('click', (e) => {
-            if (e.target.id === 'whatsapp-modal') {
-                closeModal();
+                errorMessage.textContent = userMessage;
+                errorMessage.classList.remove('hidden');
+                startButton.classList.remove('hidden');
             }
         });
 
-        // Close modal with Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeModal();
+        captureButton.addEventListener('click', () => {
+            const finalCanvas = document.createElement('canvas');
+            finalCanvas.width = astronautImage.naturalWidth;
+            finalCanvas.height = astronautImage.naturalHeight;
+            const ctx = finalCanvas.getContext('2d');
+            ctx.drawImage(astronautImage, 0, 0, finalCanvas.width, finalCanvas.height);
+            
+            const zoom = 0.35 * 1.15;
+            const scaleRatio = finalCanvas.width / astronautImage.offsetWidth;
+
+            const xOffset = currentOffset.x * scaleRatio;
+            const yOffset = currentOffset.y * scaleRatio;
+
+            const topPercent = 18.5 / 100;
+            const widthPercent = 25 / 100;
+            const heightPercent = 32 / 100;
+            
+            let drawWidth = finalCanvas.width * widthPercent;
+            let drawHeight = finalCanvas.height * heightPercent;
+            let drawX = (finalCanvas.width / 2) - (drawWidth / 2);
+            let drawY = finalCanvas.height * topPercent;
+
+            const finalWidth = drawWidth * zoom;
+            const finalHeight = drawHeight * zoom;
+            const finalX = drawX - (finalWidth - drawWidth) / 2 + xOffset;
+            const finalY = drawY - (finalHeight - drawHeight) / 2 + yOffset;
+            
+            // ** بداية الكود الجديد لإصلاح التشويه **
+            const faceCanvas = document.createElement('canvas');
+            const faceCtx = faceCanvas.getContext('2d');
+            faceCanvas.width = finalWidth;
+            faceCanvas.height = finalHeight;
+
+            // حساب الأبعاد للحفاظ على نسبة العرض إلى الارتفاع (object-fit: cover)
+            const sourceWidth = canvasElement.width;
+            const sourceHeight = canvasElement.height;
+            const destWidth = finalWidth;
+            const destHeight = finalHeight;
+            const sourceAspectRatio = sourceWidth / sourceHeight;
+            const destAspectRatio = destWidth / destHeight;
+            let renderWidth, renderHeight, xStart, yStart;
+
+            if (sourceAspectRatio > destAspectRatio) {
+                renderHeight = destHeight;
+                renderWidth = renderHeight * sourceAspectRatio;
+                xStart = (destWidth - renderWidth) / 2;
+                yStart = 0;
+            } else {
+                renderWidth = destWidth;
+                renderHeight = renderWidth / sourceAspectRatio;
+                xStart = 0;
+                yStart = (destHeight - renderHeight) / 2;
             }
-        });
+            faceCtx.drawImage(canvasElement, xStart, yStart, renderWidth, renderHeight);
 
-        // Utility functions
-        function showLoading() {
-            document.getElementById('loading').style.display = 'block';
-        }
+            // تطبيق تنعيم الحواف
+            faceCtx.globalCompositeOperation = 'destination-in';
+            const feather = faceCtx.createRadialGradient(
+                finalWidth / 2, finalHeight / 2, finalHeight * 0.3,
+                finalWidth / 2, finalHeight / 2, finalHeight / 2
+            );
+            feather.addColorStop(0, 'rgba(0,0,0,1)');
+            feather.addColorStop(1, 'rgba(0,0,0,0)');
+            faceCtx.fillStyle = feather;
+            faceCtx.fillRect(0, 0, finalWidth, finalHeight);
 
-        function hideLoading() {
-            document.getElementById('loading').style.display = 'none';
-        }
-
-        function showStatus(message, type) {
-            const status = document.getElementById('status');
-            status.textContent = message;
-            status.className = 'status ' + type;
-            status.style.display = 'block';
-
-            setTimeout(() => {
-                status.style.display = 'none';
-            }, 5000);
-        }
-
-        function hideStatus() {
-            document.getElementById('status').style.display = 'none';
-        }
-
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            signaturePad.setupCanvas();
-            signaturePad.redraw();
-        });
-
-        // Prevent context menu on canvas
-        canvas.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
+            // رسم الوجه المعالج (المقلوب أفقيًا) على اللوحة النهائية
+            ctx.save();
+            ctx.translate(finalX + finalWidth, finalY);
+            ctx.scale(-1, 1);
+            ctx.drawImage(faceCanvas, 0, 0, finalWidth, finalHeight);
+            ctx.restore();
+            // ** نهاية الكود الجديد **
+            
+            const link = document.createElement('a');
+            link.download = 'astronaut-photo.png';
+            link.href = finalCanvas.toDataURL('image/png');
+            link.click();
         });
     </script>
 </body>
 </html>
+
+
