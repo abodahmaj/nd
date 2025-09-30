@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صورتك كرائد فضاء</title>
+    <!-- استدعاء Tailwind CSS للتصميم -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- استدعاء مكتبة MediaPipe لإزالة الخلفية -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(180deg, #0f172a, #000000);
+            touch-action: none;
+        }
+        #astronaut-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: auto;
+            overflow: hidden;
+        }
+        /* تم تغيير الفيديو إلى Canvas لعرض الصورة بعد إزالة الخلفية */
+        #webcam-feed {
+            position: absolute;
+            top: 18.5%;
+            left: 50%;
+            width: 25%;
+            height: 32%; 
+            border-radius: 50%; 
+            object-fit: cover;
+            display: none;
+            cursor: grab;
+        }
+        #webcam-feed:active {
+            cursor: grabbing;
+        }
+        #astronaut-image {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 1rem;
+            box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.1);
+            animation: pulse-glow 3s infinite ease-in-out;
+        }
+        .loader {
+            border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6;
+            border-radius: 50%; width: 40px; height: 40px;
+            animation: spin 2s linear infinite; display: none; margin: 20px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.1); }
+            50% { box-shadow: 0 0 30px 10px rgba(199, 210, 254, 0.2); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-3xl text-center">
+        <h1 class="text-3xl md:text-5xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">كن رائد فضاء! 🚀</h1>
+        <p class="text-gray-400 mb-6">ضع وجهك في المكان المناسب ✨، ثم التقط صورة 🪐.</p>
+
+        <div id="astronaut-container" class="mb-6 shadow-2xl rounded-2xl">
+            <img id="astronaut-image" src="https://i.ibb.co/5XrHkbnc/Black-Illustrative-Astronaut-Square-Pillow-1.png" alt="رائد فضاء بتصميم توضيحي" crossorigin="anonymous">
+            <!-- الفيديو الأصلي سيكون مخفيًا -->
+            <video id="hidden-video" style="display: none;" autoplay playsinline muted></video>
+            <!-- Canvas لعرض الفيديو بعد إزالة الخلفية -->
+            <canvas id="webcam-feed"></canvas>
+        </div>
+        
+        <div class="flex justify-center items-center space-x-4 space-x-reverse mb-4">
+            <button id="start-camera" class="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-full transition-transform transform hover:scale-105 shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-800 flex items-center justify-center">
+                <span class="text-2xl">🛰️</span>
+                <span class="mr-3">شغّل الكاميرا</span>
+            </button>
+            <button id="capture-photo" class="bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-bold py-3 px-6 rounded-full transition-transform transform hover:scale-105 shadow-lg focus:outline-none focus:ring-4 focus:ring-green-800 hidden items-center justify-center">
+                <span class="text-2xl">📸</span>
+                <span class="mr-3">التقط صورة</span>
+            </button>
+        </div>
+
+        <div id="loader" class="loader"></div>
+        <p id="error-message" class="text-red-500 mt-4 font-semibold hidden"></p>
+
+        <div class="mt-8 text-gray-500 text-sm">
+            <p>إعداد رائد النشاط بمجمع الثقافة التعليمي</p>
+            <p class="font-semibold">أ. علي جبريل</p>
+        </div>
+    </div>
+
+    <script>
+        const videoElement = document.getElementById('hidden-video');
+        const canvasElement = document.getElementById('webcam-feed');
+        const canvasCtx = canvasElement.getContext('2d');
+        const startButton = document.getElementById('start-camera');
+        const captureButton = document.getElementById('capture-photo');
+        const loader = document.getElementById('loader');
+        const errorMessage = document.getElementById('error-message');
+        const astronautImage = document.getElementById('astronaut-image');
+        
+        let isDragging = false;
+        let startPos = { x: 0, y: 0 };
+        let currentOffset = { x: -23, y: -165 };
+        let lastContainerWidth = 0;
+
+        function updateWebcamTransform() {
+            const zoom = 0.35; 
+            canvasElement.style.transform = `translateX(calc(-50% + ${currentOffset.x}px)) translateY(${currentOffset.y}px) scale(${zoom}) scaleX(-1)`;
+        }
+        
+        function onResults(results) {
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.drawImage(results.segmentationMask, 0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.globalCompositeOperation = 'source-in';
+            canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.restore();
+        }
+
+        const selfieSegmentation = new SelfieSegmentation({locateFile: (file) => {
+            return `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`;
+        }});
+        selfieSegmentation.setOptions({ modelSelection: 1 });
+        selfieSegmentation.onResults(onResults);
+
+        async function sendVideoToSegment() {
+            if (videoElement.readyState >= 2) {
+                await selfieSegmentation.send({image: videoElement});
+            }
+            requestAnimationFrame(sendVideoToSegment);
+        }
+
+        function startDrag(event) {
+            isDragging = true;
+            canvasElement.style.cursor = 'grabbing';
+            const eventPos = event.touches ? event.touches[0] : event;
+            startPos.x = eventPos.clientX - currentOffset.x;
+            startPos.y = eventPos.clientY - currentOffset.y;
+            window.addEventListener('mousemove', drag);
+            window.addEventListener('mouseup', endDrag);
+            window.addEventListener('touchmove', drag, { passive: false });
+            window.addEventListener('touchend', endDrag);
+        }
+
+        function drag(event) {
+            if (!isDragging) return;
+            event.preventDefault(); 
+            const eventPos = event.touches ? event.touches[0] : event;
+            currentOffset.x = eventPos.clientX - startPos.x;
+            currentOffset.y = eventPos.clientY - startPos.y;
+            updateWebcamTransform();
+        }
+
+        function endDrag() {
+            isDragging = false;
+            canvasElement.style.cursor = 'grab';
+            window.removeEventListener('mousemove', drag);
+            window.removeEventListener('mouseup', endDrag);
+            window.removeEventListener('touchmove', drag);
+            window.removeEventListener('touchend', endDrag);
+        }
+
+        canvasElement.addEventListener('mousedown', startDrag);
+        canvasElement.addEventListener('touchstart', startDrag, { passive: false });
+        
+        function handleResize() {
+            if (lastContainerWidth === 0) {
+                return;
+            }
+            const newContainerWidth = astronautImage.offsetWidth;
+            const scaleFactor = newContainerWidth / lastContainerWidth;
+            currentOffset.x *= scaleFactor;
+            currentOffset.y *= scaleFactor;
+            lastContainerWidth = newContainerWidth;
+            updateWebcamTransform();
+        }
+
+        window.addEventListener('resize', handleResize);
+
+        startButton.addEventListener('click', async () => {
+            startButton.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+            loader.style.display = 'block';
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                videoElement.srcObject = stream;
+                videoElement.onloadedmetadata = () => {
+                    canvasElement.width = videoElement.videoWidth;
+                    canvasElement.height = videoElement.videoHeight;
+                    videoElement.play();
+                    sendVideoToSegment();
+                    loader.style.display = 'none';
+                    canvasElement.style.display = 'block';
+                    captureButton.classList.remove('hidden');
+                    startButton.classList.remove('hidden');
+                    lastContainerWidth = astronautImage.offsetWidth;
+                    updateWebcamTransform();
+                };
+            } catch (error) {
+                console.error("خطأ في الوصول إلى الكاميرا:", error.name, error.message);
+                loader.style.display = 'none';
+
+                let userMessage;
+                if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                    userMessage = 'لقد رفضت الإذن بالوصول إلى الكاميرا. يرجى السماح بالوصول من إعدادات المتصفح ثم تحديث الصفحة.';
+                } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+                    userMessage = 'لم يتم العثور على كاميرا. يرجى التأكد من توصيل كاميرا وأنها تعمل بشكل صحيح.';
+                } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                    userMessage = 'لا يمكن الوصول إلى الكاميرا. قد تكون قيد الاستخدام من قبل تطبيق آخر. أغلق أي برامج أخرى تستخدم الكاميرا وحاول مرة أخرى.';
+                } else {
+                     userMessage = 'حدث خطأ. تأكد من السماح بالوصول للكاميرا وأنها ليست قيد الاستخدام.';
+                }
+
+                errorMessage.textContent = userMessage;
+                errorMessage.classList.remove('hidden');
+                startButton.classList.remove('hidden');
+            }
+        });
+
+        captureButton.addEventListener('click', () => {
+            const finalCanvas = document.createElement('canvas');
+            finalCanvas.width = astronautImage.naturalWidth;
+            finalCanvas.height = astronautImage.naturalHeight;
+            const ctx = finalCanvas.getContext('2d');
+            ctx.drawImage(astronautImage, 0, 0, finalCanvas.width, finalCanvas.height);
+            
+            const zoom = 0.35 * 1.15;
+            const scaleRatio = finalCanvas.width / astronautImage.offsetWidth;
+
+            const xOffset = currentOffset.x * scaleRatio;
+            const yOffset = currentOffset.y * scaleRatio;
+
+            const topPercent = 18.5 / 100;
+            const widthPercent = 25 / 100;
+            const heightPercent = 32 / 100;
+            
+            let drawWidth = finalCanvas.width * widthPercent;
+            let drawHeight = finalCanvas.height * heightPercent;
+            let drawX = (finalCanvas.width / 2) - (drawWidth / 2);
+            let drawY = finalCanvas.height * topPercent;
+
+            const finalWidth = drawWidth * zoom;
+            const finalHeight = drawHeight * zoom;
+            const finalX = drawX - (finalWidth - drawWidth) / 2 + xOffset;
+            const finalY = drawY - (finalHeight - drawHeight) / 2 + yOffset;
+            
+            // ** بداية الكود الجديد لإصلاح التشويه **
+            const faceCanvas = document.createElement('canvas');
+            const faceCtx = faceCanvas.getContext('2d');
+            faceCanvas.width = finalWidth;
+            faceCanvas.height = finalHeight;
+
+            // حساب الأبعاد للحفاظ على نسبة العرض إلى الارتفاع (object-fit: cover)
+            const sourceWidth = canvasElement.width;
+            const sourceHeight = canvasElement.height;
+            const destWidth = finalWidth;
+            const destHeight = finalHeight;
+            const sourceAspectRatio = sourceWidth / sourceHeight;
+            const destAspectRatio = destWidth / destHeight;
+            let renderWidth, renderHeight, xStart, yStart;
+
+            if (sourceAspectRatio > destAspectRatio) {
+                renderHeight = destHeight;
+                renderWidth = renderHeight * sourceAspectRatio;
+                xStart = (destWidth - renderWidth) / 2;
+                yStart = 0;
+            } else {
+                renderWidth = destWidth;
+                renderHeight = renderWidth / sourceAspectRatio;
+                xStart = 0;
+                yStart = (destHeight - renderHeight) / 2;
+            }
+            faceCtx.drawImage(canvasElement, xStart, yStart, renderWidth, renderHeight);
+
+            // تطبيق تنعيم الحواف
+            faceCtx.globalCompositeOperation = 'destination-in';
+            const feather = faceCtx.createRadialGradient(
+                finalWidth / 2, finalHeight / 2, finalHeight * 0.3,
+                finalWidth / 2, finalHeight / 2, finalHeight / 2
+            );
+            feather.addColorStop(0, 'rgba(0,0,0,1)');
+            feather.addColorStop(1, 'rgba(0,0,0,0)');
+            faceCtx.fillStyle = feather;
+            faceCtx.fillRect(0, 0, finalWidth, finalHeight);
+
+            // رسم الوجه المعالج (المقلوب أفقيًا) على اللوحة النهائية
+            ctx.save();
+            ctx.translate(finalX + finalWidth, finalY);
+            ctx.scale(-1, 1);
+            ctx.drawImage(faceCanvas, 0, 0, finalWidth, finalHeight);
+            ctx.restore();
+            // ** نهاية الكود الجديد **
+            
+            const link = document.createElement('a');
+            link.download = 'astronaut-photo.png';
+            link.href = finalCanvas.toDataURL('image/png');
+            link.click();
+        });
+    </script>
+</body>
+</html>
+
